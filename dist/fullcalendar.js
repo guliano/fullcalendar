@@ -1335,8 +1335,8 @@ var eventGUID = 1;
 
 function EventManager(options) { // assumed to be a calendar
 	var t = this;
-	
-	
+
+
 	// exports
 	t.isFetchNeeded = isFetchNeeded;
 	t.fetchEvents = fetchEvents;
@@ -1347,15 +1347,15 @@ function EventManager(options) { // assumed to be a calendar
 	t.removeEvents = removeEvents;
 	t.clientEvents = clientEvents;
 	t.mutateEvent = mutateEvent;
-	
-	
+
+
 	// imports
 	var trigger = t.trigger;
 	var getView = t.getView;
 	var reportEvents = t.reportEvents;
 	var getEventEnd = t.getEventEnd;
-	
-	
+
+
 	// locals
 	var stickySource = { events: [] };
 	var sources = [ stickySource ];
@@ -1375,21 +1375,21 @@ function EventManager(options) { // assumed to be a calendar
 			}
 		}
 	);
-	
-	
-	
+
+
+
 	/* Fetching
 	-----------------------------------------------------------------------------*/
-	
-	
+
+
 	function isFetchNeeded(start, end) {
 		return !rangeStart || // nothing has been fetched yet?
 			// or, a part of the new range is outside of the old range? (after normalizing)
 			start.clone().stripZone() < rangeStart.clone().stripZone() ||
 			end.clone().stripZone() > rangeEnd.clone().stripZone();
 	}
-	
-	
+
+
 	function fetchEvents(start, end) {
 		rangeStart = start;
 		rangeEnd = end;
@@ -1401,8 +1401,8 @@ function EventManager(options) { // assumed to be a calendar
 			fetchEventSource(sources[i], fetchID);
 		}
 	}
-	
-	
+
+
 	function fetchEventSource(source, fetchID) {
 		_fetchEventSource(source, function(eventInputs) {
 			var isArraySource = $.isArray(source.events);
@@ -1438,8 +1438,8 @@ function EventManager(options) { // assumed to be a calendar
 			}
 		});
 	}
-	
-	
+
+
 	function _fetchEventSource(source, callback) {
 		var i;
 		var fetchers = fc.sourceFetchers;
@@ -1548,12 +1548,12 @@ function EventManager(options) { // assumed to be a calendar
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	/* Sources
 	-----------------------------------------------------------------------------*/
-	
+
 
 	function addEventSource(sourceInput) {
 		var source = buildEventSource(sourceInput);
@@ -1635,9 +1635,9 @@ function EventManager(options) { // assumed to be a calendar
 		) ||
 		source; // the given argument *is* the primitive
 	}
-	
-	
-	
+
+
+
 	/* Manipulation
 	-----------------------------------------------------------------------------*/
 
@@ -1686,7 +1686,7 @@ function EventManager(options) { // assumed to be a calendar
 		}
 	}
 
-	
+
 	// returns the expanded events that were created
 	function renderEvent(eventInput, stick) {
 		var abstractEvent = buildEventFromInput(eventInput);
@@ -1715,8 +1715,8 @@ function EventManager(options) { // assumed to be a calendar
 
 		return [];
 	}
-	
-	
+
+
 	function removeEvents(filter) {
 		var eventID;
 		var i;
@@ -1745,8 +1745,8 @@ function EventManager(options) { // assumed to be a calendar
 
 		reportEvents(cache);
 	}
-	
-	
+
+
 	function clientEvents(filter) {
 		if ($.isFunction(filter)) {
 			return $.grep(cache, filter);
@@ -1759,28 +1759,28 @@ function EventManager(options) { // assumed to be a calendar
 		}
 		return cache; // else, return all
 	}
-	
-	
-	
+
+
+
 	/* Loading State
 	-----------------------------------------------------------------------------*/
-	
-	
+
+
 	function pushLoading() {
 		if (!(loadingLevel++)) {
 			trigger('loading', null, true, getView());
 		}
 	}
-	
-	
+
+
 	function popLoading() {
 		if (!(--loadingLevel)) {
 			trigger('loading', null, false, getView());
 		}
 	}
-	
-	
-	
+
+
+
 	/* Event Normalization
 	-----------------------------------------------------------------------------*/
 
@@ -2236,12 +2236,14 @@ function EventManager(options) { // assumed to be a calendar
 	}
 
 
-	function isSelectionAllowedInRange(start, end) {
+	function isSelectionAllowedInRange(start, end, sourceSeg) {
 		return isRangeAllowed(
 			start,
 			end,
 			options.selectConstraint,
-			options.selectOverlap
+			options.selectOverlap,
+      null,
+      sourceSeg
 		);
 	}
 
@@ -2263,7 +2265,7 @@ function EventManager(options) { // assumed to be a calendar
 	// Returns true if the given range (caused by an event drop/resize or a selection) is allowed to exist
 	// according to the constraint/overlap settings.
 	// `event` is not required if checking a selection.
-	function isRangeAllowed(start, end, constraint, overlap, event) {
+	function isRangeAllowed(start, end, constraint, overlap, event, sourceSeg) {
 		var constraintEvents;
 		var anyContainment;
 		var i, otherEvent;
@@ -2324,6 +2326,13 @@ function EventManager(options) { // assumed to be a calendar
 						return false;
 					}
 				}
+
+        //for selection with resources
+        if (sourceSeg) {
+          if (otherEvent.resources.indexOf(sourceSeg.event.resources[0]) !== -1) {
+            return false;
+          }
+        }
 			}
 		}
 
@@ -4888,7 +4897,7 @@ $.extend(Grid.prototype, {
 					}
 
 					if (isSelectable) {
-						if (calendar.isSelectionAllowedInRange(start, end)) { // allowed to select within this range?
+						if (calendar.isSelectionAllowedInRange(start, end, sourceSeg)) { // allowed to select within this range?
 							_this.renderSelection(start, end, sourceSeg);
 						}
 						else {

@@ -122,7 +122,7 @@ $.extend(Grid.prototype, {
 					}
 
 					if (isSelectable) {
-						if (calendar.isSelectionAllowedInRange(start, end)) { // allowed to select within this range?
+						if (calendar.isSelectionAllowedInRange(start, end, sourceSeg)) { // allowed to select within this range?
 							_this.renderSelection(start, end, sourceSeg);
 						}
 						else {
